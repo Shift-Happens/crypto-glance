@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify, send_file
 import requests
 import pandas as pd
-from io import StringIO
+from io import BytesIO  # Change this import
 import json
 
 app = Flask(__name__)
@@ -34,11 +34,12 @@ def export_csv():
     result = get_address_balance(address)
     
     df = pd.DataFrame([result])
-    csv_buffer = StringIO()
+    csv_buffer = BytesIO()  # Use BytesIO instead of StringIO
     df.to_csv(csv_buffer, index=False)
+    csv_buffer.seek(0)  # Reset buffer position to start
     
     return send_file(
-        StringIO(csv_buffer.getvalue()),
+        csv_buffer,
         mimetype='text/csv',
         as_attachment=True,
         download_name='bitcoin_balance.csv'
