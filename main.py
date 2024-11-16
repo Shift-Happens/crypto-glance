@@ -86,5 +86,25 @@ def export_csv():
         download_name=f'bitcoin_balance_{address}.csv'
     )
 
+@app.route('/export_history', methods=['POST'])
+def export_history():
+    if 'history' not in session:
+        return jsonify({'error': 'No history found'})
+    
+    # Create DataFrame from history
+    df = pd.DataFrame(session['history'], columns=['address'])
+    
+    # Create CSV buffer
+    csv_buffer = BytesIO()
+    df.to_csv(csv_buffer, index=False)
+    csv_buffer.seek(0)
+    
+    return send_file(
+        csv_buffer,
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='search_history.csv'
+    )
+
 if __name__ == '__main__':
     app.run(debug=True)
