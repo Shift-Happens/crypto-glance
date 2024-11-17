@@ -1,7 +1,3 @@
-# Crypto-Glance
-
-A web application for checking Bitcoin wallet balances and transaction histories in real-time using the Blockchain.info API.
-
 ## Features
 
 - 🔍 Look up any Bitcoin address balance
@@ -10,39 +6,11 @@ A web application for checking Bitcoin wallet balances and transaction histories
 - 📝 Keep track of search history
 - 📥 Export data to CSV format
 - 🔗 Clickable transaction addresses for easy navigation
-
-## Requirements
-
-In requirements.md file 
-
-Here's a README.md for your Crypto-Glance project:
-
-```markdown
-# Crypto-Glance
-
-A web application for checking Bitcoin wallet balances and transaction histories in real-time using the Blockchain.info API.
-
-## Features
-
-- 🔍 Look up any Bitcoin address balance
-- 💰 View balance in both BTC and USD
-- 📊 Display recent transactions with details
-- 📝 Keep track of search history
-- 📥 Export data to CSV format
-- 🔗 Clickable transaction addresses for easy navigation
-
-## Requirements
-
-- Python 3.x
-- Flask 3.1.0
-- Requests 2.32.2
-- Pandas 2.2.3
-
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/crypto-glance.git
+git clone https://github.com/Shift-Happens/crypto-glance.git
 cd crypto-glance
 ```
 
