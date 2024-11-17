@@ -5,6 +5,8 @@
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
     <style>
         .history-item {
             cursor: pointer;
@@ -66,6 +68,26 @@
         .balance-usd {
             font-size: 1.2rem;
             color: #6c757d;
+        }
+        .price-box {
+            padding: 1rem;
+            border-radius: 0.25rem;
+            background-color: #f8f9fa;
+            text-align: center;
+        }
+        .crypto-symbol {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .crypto-icon {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+        .price-box .d-flex {
+            justify-content: center;
+            margin-bottom: 0.5rem;
         }
     </style>
 </head>
@@ -147,7 +169,113 @@
                 </div>
             </div>
         </div>
+
+        <!-- Add this after the history sidebar -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Cryptocurrency Prices</h5>
+                        <div class="row" id="cryptoPrices">
+                            <div class="col-md-2">
+                                <div class="price-box">
+                                        <img src="{{ url_for('static', filename='img/crypto/btc.png') }}" 
+                                             class="crypto-icon me-2">
+                                        <span class="crypto-symbol">BTC</span>
+                                    <span id="BTCPrice">Loading...</span>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="price-box">
+                                    <img src="{{ url_for('static', filename='img/crypto/eth.png') }}" 
+                                    class="crypto-icon me-2">
+                                    <span class="crypto-symbol">ETH</span>
+                                    <span id="ETHPrice">Loading...</span>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="price-box">
+                                    <img src="{{ url_for('static', filename='img/crypto/bnb.png') }}" 
+                                    class="crypto-icon me-2">
+                                    <span class="crypto-symbol">BNB</span>
+                                    <span id="BNBPrice">Loading...</span>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="price-box">
+                                    <img src="{{ url_for('static', filename='img/crypto/xrp.png') }}" 
+                                    class="crypto-icon me-2">
+                                    <span class="crypto-symbol">XRP</span>
+                                    <span id="XRPPrice">Loading...</span>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="price-box">
+                                    <img src="{{ url_for('static', filename='img/crypto/sol.png') }}" 
+                                    class="crypto-icon me-2">
+                                    <span class="crypto-symbol">SOL</span>
+                                    <span id="SOLPrice">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Move modal definition before script section -->
+    <div class="modal fade" id="alertModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Set Price Alert</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="alertForm">
+                        <div class="mb-3">
+                            <label class="form-label">Cryptocurrency</label>
+                            <select class="form-select" id="cryptoSelect" required>
+                                <option value="BTC">Bitcoin (BTC)</option>
+                                <option value="ETH">Ethereum (ETH)</option>
+                                <option value="BNB">Binance Coin (BNB)</option>
+                                <option value="XRP">Ripple (XRP)</option>
+                                <option value="SOL">Solana (SOL)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="emailInput" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Target Price (USD)</label>
+                            <input type="number" step="0.01" class="form-control" id="priceInput" required>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="alertType" value="above" checked>
+                                <label class="form-check-label">Alert when price goes above</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="alertType" value="below">
+                                <label class="form-check-label">Alert when price goes below</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="setAlertBtn">Set Alert</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add button to open modal -->
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#alertModal">
+        Set Price Alert
+    </button>
 
     <script>
         function checkAddress(address) {
@@ -235,6 +363,51 @@
             form.submit();
             document.body.removeChild(form);
         };
+
+        // Add price monitoring functionality
+        async function updateCryptoPrices() {
+            try {
+                const response = await fetch('/api/prices');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const prices = await response.json();
+                
+                // Update price display
+                for (const [crypto, price] of Object.entries(prices)) {
+                    const priceElement = document.getElementById(`${crypto}Price`);
+                    if (priceElement) {
+                        priceElement.textContent = `$${price.toFixed(2)}`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating prices:', error);
+            }
+        }
+
+        // Set up alert
+        document.getElementById('setAlertBtn').onclick = async () => {
+            const crypto = document.getElementById('cryptoSelect').value;
+            const email = document.getElementById('emailInput').value;
+            const targetPrice = document.getElementById('priceInput').value;
+            const above = document.querySelector('input[name="alertType"]:checked').value === 'above';
+            
+            const response = await fetch('/api/alerts', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({crypto, email, target_price: targetPrice, above})
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                alert('Alert set successfully!');
+                bootstrap.Modal.getInstance(document.getElementById('alertModal')).hide();
+            }
+        };
+
+        // Update prices periodically
+        setInterval(updateCryptoPrices, 30000);
+        updateCryptoPrices();
     </script>
 </body>
 </html>

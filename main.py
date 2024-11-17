@@ -3,9 +3,11 @@ import requests
 import pandas as pd
 from io import BytesIO
 from datetime import datetime
+from crypto_monitor import CryptoMonitor
+import os
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key'  # Required for session
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'your-secret-key')
 
 def get_transactions(address):
     """Get transaction history for a Bitcoin address"""
@@ -138,6 +140,51 @@ def export_history():
         as_attachment=True,
         download_name='search_history.csv'
     )
+
+# Initialize CryptoMonitor with configs
+smtp_config = {
+    'server': os.getenv('SMTP_SERVER', 'smtp.gmail.com'),
+    'port': int(os.getenv('SMTP_PORT', '587')),
+    'username': os.getenv('SMTP_USERNAME', ''),
+    'password': os.getenv('SMTP_PASSWORD', ''),
+    'sender': os.getenv('SMTP_SENDER', '')
+}
+
+crypto_monitor = CryptoMonitor(smtp_config)
+crypto_monitor.start_monitoring()
+
+# Add new routes
+@app.route('/api/prices', methods=['GET'])
+def get_prices():
+    try:
+        prices = crypto_monitor.get_crypto_prices()
+        if prices is None:
+            return jsonify({'error': 'Failed to fetch prices'}), 500
+        return jsonify(prices)
+    except Exception as e:
+        print(f"Error in get_prices route: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/alerts', methods=['POST'])
+def set_alert():
+    data = request.json
+    result = crypto_monitor.set_alert(
+        data['crypto'],
+        data['email'],
+        float(data['target_price']),
+        data.get('above', True)
+    )
+    return jsonify({'success': result})
+
+@app.route('/api/alerts', methods=['DELETE'])
+def remove_alert():
+    data = request.json
+    result = crypto_monitor.remove_alert(
+        data['crypto'],
+        data['email'],
+        float(data['target_price'])
+    )
+    return jsonify({'success': result})
 
 if __name__ == '__main__':
     app.run(debug=True)
