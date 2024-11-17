@@ -10,17 +10,44 @@ app.secret_key = 'your-secret-key'  # Required for session
 def get_transactions(address):
     """Get transaction history for a Bitcoin address"""
     url = f"https://blockchain.info/rawaddr/{address}"
+    btc_price_url = "https://blockchain.info/ticker"
     try:
+        # Get BTC price in USD
+        price_response = requests.get(btc_price_url)
+        price_data = price_response.json()
+        btc_usd_rate = price_data['USD']['last']
+
         response = requests.get(url)
+        response.raise_for_status()
         data = response.json()
         txs = data.get('txs', [])[:10]  # Get last 10 transactions
-        return [{
-            'hash': tx['hash'],
-            'time': datetime.fromtimestamp(tx['time']).strftime('%Y-%m-%d %H:%M'),
-            'amount': sum(out['value'] for out in tx['out']) / 100000000
-        } for tx in txs]
-    except:
-        return []
+        
+        return {
+            'status': 'success',
+            'data': [{
+                'hash': tx['hash'],
+                'time': datetime.fromtimestamp(tx['time']).strftime('%Y-%m-%d %H:%M'),
+                'amount': sum(out['value'] for out in tx['out']) / 100000000,
+                'amount_usd': (sum(out['value'] for out in tx['out']) / 100000000) * btc_usd_rate,
+                'from': [inp.get('prev_out', {}).get('addr', 'Unknown') for inp in tx.get('inputs', [])],
+                'to': [out.get('addr', 'Unknown') for out in tx.get('out', [])]
+            } for tx in txs]
+        }
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 429:
+            return {
+                'status': 'error',
+                'message': 'Rate limit exceeded. Please try again later.'
+            }
+        return {
+            'status': 'error',
+            'message': f'API error: {str(e)}'
+        }
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'Error fetching transactions: {str(e)}'
+        }
 
 def get_address_balance(address):
     """Get balance for a Bitcoin address using blockchain.info API"""
@@ -30,14 +57,20 @@ def get_address_balance(address):
         data = response.json()
         balance_satoshi = data[address]['final_balance']
         balance_btc = balance_satoshi / 100000000
-        transactions = get_transactions(address)
+        transactions_result = get_transactions(address)
         return {
             "address": address,
             "balance": balance_btc,
-            "transactions": transactions
+            "transactions": transactions_result.get('data', []),
+            "error": transactions_result.get('message') if transactions_result['status'] == 'error' else None
         }
-    except:
-        return {"address": address, "balance": 0, "transactions": [], "error": "Failed to fetch"}
+    except Exception as e:
+        return {
+            "address": address, 
+            "balance": 0, 
+            "transactions": [], 
+            "error": f"Failed to fetch balance: {str(e)}"
+        }
 
 @app.route('/')
 def home():
