@@ -1,8 +1,9 @@
 # Crypto Glance
-
-A real-time Bitcoin wallet explorer built with Flask that lets you check balances and transaction histories using the Blockchain.info API.
+![image](https://github.com/user-attachments/assets/4a991599-63ed-4965-897c-974bff4eb4f6)
+A Bitcoin wallet explorer built with Flask that lets you check balances and transaction histories using the Blockchain.info API.
 
 ## Features
+
 
 - 🔍 Look up any Bitcoin address balance
 - 💰 View balance in both BTC and USD
