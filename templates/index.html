@@ -146,7 +146,12 @@
                             </div>
                         </div>
                     </div>
-                    <button class="btn btn-success" id="exportCsv">Export to CSV</button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success" id="exportCsv">Export to CSV</button>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#alertModal">
+                            Set Price Alert
+                        </button>
+                    </div>
                 </div>
             </div>
             
@@ -273,11 +278,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Add button to open modal -->
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#alertModal">
-        Set Price Alert
-    </button>
 
     <script>
         function checkAddress(address) {
