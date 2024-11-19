@@ -288,7 +288,28 @@
         function createAddressLink(address) {
             return `<span class="clickable-address" onclick="checkAddress('${address}')">${address.substring(0, 12)}...</span>`;
         }
+        function updateHistoryList(address) {
+            const historyList = document.getElementById('historyList');
+            
+            // Check if address already exists in history
+            if (!historyList.innerHTML.includes(address)) {
+                // Create new history item
+                const newItem = document.createElement('div');
+                newItem.className = 'history-item';
+                newItem.onclick = () => checkAddress(address);
+                newItem.textContent = address;
+                
+                // Add to top of list
+                historyList.insertBefore(newItem, historyList.firstChild);
+                
+                // Keep only last 10 items
+                while (historyList.children.length > 10) {
+                    historyList.removeChild(historyList.lastChild);
+                }
+            }
+        }
 
+        // Modify the addressForm onsubmit handler to update history
         document.getElementById('addressForm').onsubmit = async (e) => {
             e.preventDefault();
             const address = document.getElementById('addressInput').value;
@@ -300,9 +321,13 @@
             });
             
             const data = await response.json();
-            console.log('Full response data:', data); // Debug log
-            console.log('Transactions:', data.transactions); // Debug log
-
+            
+            // Update history after successful response
+            if (!data.error) {
+                updateHistoryList(address);
+            }
+            
+            // Rest of your existing code...
             document.getElementById('result').classList.remove('d-none');
             const balanceText = document.getElementById('balanceText');
             const btcValue = data.balance.toFixed(8);
