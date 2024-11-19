@@ -42,14 +42,16 @@
             font-size: 2.5rem;
             font-weight: 500; /* Reduced from bold (700) */
             color: #0d6efd;
+            word-break: break-word; /* Allows long numbers to wrap */
         }
         .balance-unit {
             font-size: 1.2rem;
             color: #6c757d;
         }
         .balance-card {
-            max-width: 400px;
+            max-width: 600px;  /* Increased from 400px */
             margin: 0 auto;
+            width: 100%;
         }
         .card-body.balance-content {
             padding: 2.5rem;
@@ -66,7 +68,7 @@
             text-overflow: ellipsis;
         }
         .balance-usd {
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             color: #6c757d;
         }
         .price-box {
