@@ -159,10 +159,11 @@ def get_prices():
     try:
         prices = crypto_monitor.get_crypto_prices()
         if prices is None:
+            print("Failed to fetch prices")  # Server-side logging
             return jsonify({'error': 'Failed to fetch prices'}), 500
         return jsonify(prices)
     except Exception as e:
-        print(f"Error in get_prices route: {str(e)}")
+        print(f"Error in get_prices: {str(e)}")  # Server-side logging
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/alerts', methods=['POST'])
