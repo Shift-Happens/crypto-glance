@@ -308,7 +308,13 @@
             document.getElementById('result').classList.remove('d-none');
             const balanceText = document.getElementById('balanceText');
             const btcValue = data.balance.toFixed(8);
-            const usdValue = (data.transactions[0]?.amount_usd || 0).toFixed(2);
+            
+            // Calculate USD value from current BTC price
+            const btcPriceResponse = await fetch('/api/prices');
+            const prices = await btcPriceResponse.json();
+            const btcUsdPrice = prices.BTC || 0;
+            const usdValue = (data.balance * btcUsdPrice).toFixed(2);
+            
             balanceText.innerHTML = `
                 <div class="balance-btc mb-2">
                     <span class="balance-value">${btcValue}</span>
@@ -372,17 +378,21 @@
             });
             
             const data = await response.json();
-            
-            // Update history after successful response
             if (!data.error) {
                 updateHistoryList(address);
             }
-            
-            // Rest of your existing code...
+
+            // Update UI with new data
             document.getElementById('result').classList.remove('d-none');
             const balanceText = document.getElementById('balanceText');
             const btcValue = data.balance.toFixed(8);
-            const usdValue = (data.transactions[0]?.amount_usd || 0).toFixed(2);
+            
+            // Calculate USD value from current BTC price
+            const btcPriceResponse = await fetch('/api/prices');
+            const prices = await btcPriceResponse.json();
+            const btcUsdPrice = prices.BTC || 0;
+            const usdValue = (data.balance * btcUsdPrice).toFixed(2);
+            
             balanceText.innerHTML = `
                 <div class="balance-btc mb-2">
                     <span class="balance-value">${btcValue}</span>
