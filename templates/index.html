@@ -286,8 +286,59 @@
         }
 
         function createAddressLink(address) {
-            return `<span class="clickable-address" onclick="checkAddress('${address}')">${address.substring(0, 12)}...</span>`;
+            return `<span class="clickable-address" onclick="handleAddressClick('${address}')">${address.substring(0, 12)}...</span>`;
         }
+
+        async function handleAddressClick(address) {
+            // Update input and history
+            document.getElementById('addressInput').value = address;
+            
+            const response = await fetch('/check_address', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `address=${address}`
+            });
+            
+            const data = await response.json();
+            if (!data.error) {
+                updateHistoryList(address);
+            }
+            
+            // Update UI with new data
+            document.getElementById('result').classList.remove('d-none');
+            const balanceText = document.getElementById('balanceText');
+            const btcValue = data.balance.toFixed(8);
+            const usdValue = (data.transactions[0]?.amount_usd || 0).toFixed(2);
+            balanceText.innerHTML = `
+                <div class="balance-btc mb-2">
+                    <span class="balance-value">${btcValue}</span>
+                    <span class="balance-unit">BTC</span>
+                </div>
+                <div class="balance-usd">
+                    <span class="text-muted">$${usdValue}</span>
+                </div>
+            `;
+
+            // Update transactions table
+            const transactionsBody = document.getElementById('transactionsBody');
+            if (data.error) {
+                transactionsBody.innerHTML = `
+                    <tr><td colspan="5" class="text-danger">${data.error}</td></tr>`;
+            } else if (data.transactions && data.transactions.length > 0) {
+                transactionsBody.innerHTML = data.transactions.map(tx => `
+                    <tr>
+                        <td>${tx.amount.toFixed(8)}</td>
+                        <td>$${tx.amount_usd.toFixed(2)}</td>
+                        <td>${tx.from.map(createAddressLink).join('<br>')}</td>
+                        <td>${tx.time}</td>
+                        <td><small>${tx.hash.substring(0, 8)}...</small></td>
+                    </tr>
+                `).join('');
+            } else {
+                transactionsBody.innerHTML = '<tr><td colspan="6">No transactions found</td></tr>';
+            }
+        }
+
         function updateHistoryList(address) {
             const historyList = document.getElementById('historyList');
             
