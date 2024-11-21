@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Test, Build and Push Docker Image
 
 on:
   push:
@@ -12,7 +12,29 @@ env:
   PLATFORMS: linux/amd64,linux/arm64
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.7'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: python tests/test_basic.py
+        env:
+          FLASK_SECRET_KEY: ${{ secrets.FLASK_SECRET_KEY }}
+
   build-and-push:
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
